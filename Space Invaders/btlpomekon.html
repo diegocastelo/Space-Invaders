@@ -1,0 +1,67 @@
+<meta charset = "UTF-8">
+<script>
+
+var a = parseInt(prompt(""))
+var b = parseInt(prompt(""))
+
+var contador = 0
+if (a>b){
+    var aux = a
+    a = b
+    b = aux
+}
+
+for(var i = a ; i<=b ; i++){
+    if((i%13) != 0){
+        contador = contador + i
+    }
+}
+document.write(contador)
+
+
+
+
+
+
+
+
+
+/* var T = parseInt(prompt(""))
+for(i=0; i<T; i++){
+    var bonus = parseInt(prompt(""))
+    var [dAi, dDi, dLi] = prompt("").split(" ").map(Number)
+    var [gAi, gDi, gLi] = prompt("").split(" ").map(Number)
+    var ataqueD = 0
+    var ataqueG = 0
+    if((dLi%2) ==0) {
+		ataqueD = ((dAi + dDi)/2) + bonus; 
+    }else {
+		ataqueD = ((dAi + dDi)/2);
+		}
+	if((gLi%2) ==0) {
+		ataqueG = ((gAi + gDi)/2) + bonus; 
+	}else {
+		ataqueG = ((gAi + gDi)/2);
+		}
+    if(ataqueD > ataqueG) {
+        console.log("Dabriel") 
+		}
+	else if(ataqueD < ataqueG) {
+		console.log("Guarte");
+	}else {
+		console.log("Empate");
+		}
+	var bonus = 0
+    var dAi = 0    
+    var dDi = 0
+    var dLi = 0
+    var gAi = 0
+    var gDi = 0    
+    var gLi = 0
+
+
+
+}*/
+
+
+</script>

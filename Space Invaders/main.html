@@ -1,0 +1,450 @@
+<canvas id="tela" width="400" height="600"></canvas>
+
+
+
+<script>
+// Space Invaders
+// Autor: Ayo Oyewole
+// Adaptado por: Gilson Pereira
+// Código fonte original: http://www.ayodeji.ca/space-invaders/
+
+// Programa principal
+
+//Alunos: Diego Castelo e Gabriel Gonçalves 
+
+var audioCavalo;
+
+var alienAtual;
+var tiroAlien;
+var tiroAlienY;
+var alienAtirou;
+var movimentoTiroAlien;
+var colunaAlienQueAtira;
+var metadeDoAlienX;
+
+var alienAcelerando;
+var alienMorto=0;
+
+var pontuacao = 0;
+var vidas = 3;
+
+var tela;
+var c;
+var h;
+
+var canhao;
+
+var laser;
+
+var alien;
+var icecube;
+var salsicha;
+
+var contadorAlien = 55;
+
+var canhaoX = 180;
+var canhaoY = 529;
+var laserX = 193;
+var laserY = 520;
+var tiroX =  1;
+var tiroY =  1;
+var alienX = 0;
+var alienY = 0;
+var inicioLaser = false;
+var inicioTiro = false;
+
+var impactoLaserX;
+var impactoTiroX;
+var laserMovendo;
+var tiroMovendo;
+var intervalo = 50;
+var posicao = 0;
+
+
+var alienLinhas = [10, 38, 66, 94, 122, 150, 178, 206, 234, 262, 290];
+var alienColunas = [55, 85, 115, 145, 175];
+var aliensRestantes = [];
+
+const C_ALTURA = 600;
+const C_LARGURA = 400;
+const H_ALTURA = 20;
+const H_LARGURA = 700;
+
+
+const TECLA_ESQUERDA = 37;
+const TECLA_DIREITA = 39;
+const TECLA_ACIMA = 38;
+
+onkeydown = moverCanhao; // Define função chamada ao se pressionar uma tecla
+
+iniciar(); // Chama função inicial do jogo
+
+
+// Sub-rotinas (funções)
+
+function iniciar() {
+    tela = document.getElementById("tela");
+    c = tela.getContext("2d");
+    
+	c.fillStyle = "purple";
+	c.fillRect(0, 0, C_LARGURA, C_ALTURA);
+    
+    posicionarAlien();
+    carregarImagens();
+    
+    
+	setInterval("moverAliens()", intervalo);
+    setInterval("alienAtingido()", 6);
+}    
+
+function posicionarAlien() {
+    for (var i = 0; i < alienLinhas.length; i++){
+        for (var j = 0; j < alienColunas.length; j++){
+            var novoAlien = {
+                posX : alienLinhas[i],
+                posY : alienColunas[j],
+                foiAtingido : false
+			};
+			
+            aliensRestantes[aliensRestantes.length] = novoAlien;
+        }
+    }
+}    
+
+function carregarImagens() {
+    canhao = new Image();
+    canhao.src = "aviao.png";
+    canhao.onload = function(){
+        c.drawImage(canhao, canhaoX, canhaoY);
+    }
+    
+    laser = new Image();
+    laser.src = "tiro.png";
+    
+    alien = new Image();
+    alien.src = "alien.png";
+
+    icecube = new Image();
+    icecube.src = "icecubefinal.png";
+
+    salsicha = new Image();
+    salsicha.src = "cabecadasalsicha (2).png";
+
+    audioCavalo = new Audio();
+    audioCavalo.src = "cavalo.mp3"
+
+    audioTiro = new Audio();
+    audioTiro.src = "barulhoTiro (1).mp3"
+
+    audioqueIsso = new Audio();
+    audioqueIsso.src = "queIsso.mp3"
+
+    audioAlienMovimento = new Audio();
+    audioAlienMovimento.src = "Sax.mp3"
+}
+
+function moverAliens(){
+    
+        if (posicao <= 65){
+            alienX += 1;
+            posicao += 1;
+        } else if ((posicao > 65) && (posicao <= 80)){
+            alienX += 1;
+            alienY += 1
+            posicao += 1;            
+        } else if ((posicao > 80) && (posicao <= 147)){
+            alienX -= 1;
+            posicao += 1;
+        } else if ((posicao > 147) && (posicao < 162)){
+            alienX -= 1;
+            alienY += 1;
+            posicao += 1;
+        } else{
+            posicao = 0;
+        }
+        
+        for (var i = 0; i < aliensRestantes.length; i++){
+            
+            
+                
+            if (!aliensRestantes[i].foiAtingido){
+                
+                if(aliensRestantes[i].posY == 55 ){
+                    
+                    c.fillRect((alienX + aliensRestantes[i].posX - 1), (alienY + aliensRestantes[i].posY - 1), 20, 25);
+                    c.drawImage(icecube, (alienX + aliensRestantes[i].posX), (alienY + aliensRestantes[i].posY));
+                }else if(aliensRestantes[i].posY == 115 ||  aliensRestantes[i].posY == 85){
+                    
+                    c.fillRect((alienX + aliensRestantes[i].posX - 1), (alienY + aliensRestantes[i].posY - 1), 20, 25);
+                    c.drawImage(alien, (alienX + aliensRestantes[i].posX), (alienY + aliensRestantes[i].posY));
+                }else{
+                    
+                    c.fillRect((alienX + aliensRestantes[i].posX - 1), (alienY + aliensRestantes[i].posY - 1), 20, 25);
+                    c.drawImage(salsicha, (alienX + aliensRestantes[i].posX), (alienY + aliensRestantes[i].posY));
+                    
+                }
+            
+                if ((aliensRestantes[i].posY + alienY + 23) >= 530){
+                    fimDeJogo();
+                    audioAlienMovimento.pause();
+                    
+                }if ((contadorAlien)== 0){
+                    ganhei();
+                }
+                
+            
+                
+            }
+        }
+}
+
+function alienAtingido(){
+   
+    for(var i = 0; i < aliensRestantes.length; i++){
+        if ((laserY >= (alienY + aliensRestantes[i].posY)) && (laserY <= (alienY + aliensRestantes[i].posY + 20)) && 
+            (impactoLaserX >= (alienX + aliensRestantes[i].posX - 5)) && (impactoLaserX <= (alienX + aliensRestantes[i].posX + 18))){
+            if (!aliensRestantes[i].foiAtingido){
+                c.fillStyle = "purple";
+                c.fillRect((alienX + aliensRestantes[i].posX - 1), (alienY + aliensRestantes[i].posY - 1), 20, 25);
+                aliensRestantes[i].foiAtingido = true;
+                c.fillRect(impactoLaserX, laserY, 6, 19);
+                laserY = 0;
+                audioCavalo.play()
+
+                if(aliensRestantes[i].posY == 55 && aliensRestantes[i].foiAtingido){
+                    pontuacao = pontuacao + 40;
+                    console.log(pontuacao);
+                }
+
+                if((aliensRestantes[i].posY == 85 && aliensRestantes[i].foiAtingido) || (aliensRestantes[i].posY == 115 && aliensRestantes[i].foiAtingido)){
+                    pontuacao = pontuacao + 20;
+                    console.log(pontuacao);
+                }
+                if((aliensRestantes[i].posY == 145 && aliensRestantes[i].foiAtingido) || (aliensRestantes[i].posY == 175 && aliensRestantes[i].foiAtingido)){
+                    pontuacao = pontuacao + 10;
+                    console.log(pontuacao);
+                }
+
+
+
+
+                alienMorto++
+
+                if(alienMorto==10) {
+                    alienAcelerando = setInterval("moverAliens()", intervalo--);
+                }
+                if(alienMorto==20) {
+                    alienAcelerando = setInterval("moverAliens()", intervalo--);
+                }
+                if(alienMorto==30) {
+                    alienAcelerando = setInterval("moverAliens()", intervalo--);
+                }
+                if(alienMorto==40) {
+                    alienAcelerando = setInterval("moverAliens()", intervalo--);
+                }
+                if(alienMorto==45) {
+                    alienAcelerando = setInterval("moverAliens()", intervalo--);
+                } 
+                
+                
+            }
+        }
+    }   
+    
+   
+}
+
+function fimDeJogo(){
+    
+    canhaoX = 180;
+    laserX = 193;
+    laserY = 520;
+    alienX = 0;
+    alienY = 0;
+    posicao = 0;
+    aliensRestantes = [];
+    inicioLaser = false;
+	
+    c.fillStyle = "purple";
+	c.fillRect(0, 0, C_LARGURA, C_ALTURA);
+    
+    c.textAlign = "center";
+    c.font = "16px Arial";
+    c.fillStyle = "white";
+    c.fillText("Fim de Jogo, sua pontuação foi: " + pontuacao, C_LARGURA/2, C_ALTURA/2);
+
+    onkeydown = null;
+    audioqueIsso.play();
+    
+}
+
+function moverCanhao(tecla){
+    var codigo = tecla.keyCode;
+    
+    if ((codigo == TECLA_DIREITA) && (canhaoX <= 360)){
+        c.fillStyle = "purple";
+        c.fillRect(canhaoX, 537, 31, 19);
+        canhaoX += 8;
+        laserX += 8;
+		c.drawImage(canhao, canhaoX, canhaoY);
+    }
+    
+    if ((codigo == TECLA_ESQUERDA) && (canhaoX >= 9)){
+        c.fillStyle = "purple";
+        c.fillRect(canhaoX, 537, 31, 19);
+        canhaoX -= 8;
+        laserX -= 8;
+		c.drawImage(canhao, canhaoX, canhaoY);
+    }
+    
+    if ((codigo == TECLA_ACIMA) && !inicioLaser){
+        
+        inicioLaser = true;
+        c.drawImage(laser, laserX, laserY);
+        impactoLaserX = laserX;
+        laserMovendo = setInterval("dispararLaser()", 0);
+        audioTiro.play()
+        audioAlienMovimento.play()
+        HP();
+
+    }
+}
+
+function dispararLaser(){
+    
+    if (inicioLaser && (laserY >= 60)){
+        laserY -= 10;
+        c.fillStyle = "purple";
+        c.fillRect(impactoLaserX, (laserY + 10), 6, 19);
+		
+        if (laserY >= 70){
+            c.drawImage(laser, impactoLaserX, laserY);
+        }
+    }
+	
+    if (laserY < 60){
+        clearInterval(laserMovendo);
+        inicioLaser = false;
+        laserY = 520;
+    }
+}
+//nave
+function dispararTiro(){
+    if (inicioTiro && (tiroY >= 600)){
+        tiroY += 10;
+        c.fillStyle = "purple";
+        c.fillRect(impactotiroX, (tiroY + 10), 6, 19);
+		
+        if (tiroY >= 70){
+            c.drawImage(tiro, impactotiroX, tiroY);
+        }
+    }
+	
+    if (tiroY < 60){
+        clearInterval(tiroMovendo);
+        iniciotiro = false;
+        tiroY = 520;
+    }
+}
+
+function disparatiroAlien (alienAtual, posX){
+c.clearRect((posX), (tiroAlienY - 37), 10, 27);
+c.drawImage(tiroAlien, posX, tiroAlienY - 27);
+tiroAlienY += 10;
+//tiro alien
+if(tiroAlienAcertouCanhao()){
+    clearInterval(movimentoTiroAlien);
+    alienAtirou = false;
+    c.clearRect((posX), (tiroAlienY - 37), 10, 27);
+    if(vidar != 0 ){
+        c.drawImagem(canhao, canhaoX, canhaoY);
+    }
+}
+perdeVida();
+
+if(tiroAlienY >= 635){
+    clearInterval(movimentoTiroAlien);
+    alienAtirou = false;
+    tiroAlienY = alienY + alienAtual.pstY + 33;
+    }
+}
+
+//quem atira 
+function quemAtira(){
+    const colunaAlienAtirador = math.floor(Math.random() * alienLinhas.length);
+
+    for (let j = alienColunas.length - 1 ; j >= 0 ; j--){
+        const linhaAtual = j % 5;
+        const indiceAlienAtual = colunaAliensQueAtira * 5 + linhaAtual;
+        alienAtual = aliensRestantes[indiceAlienAtual];
+        if(!alienAtual.foiAtingido){
+            return alienAtual;
+            c.drawImage(tiroAlien, metadeDoAlienX + alienAtual.posX, alienAtual.posY + 33 + tiroAlienY);
+        }
+    }
+}
+
+//se o primeiro alien atirar 
+
+function tiroAlienSempreDaUltimaLinha(){
+    if (!alienAtirou) {
+        var alienAtual = defineAtirador();
+        alienAtirou = true; 
+        tiroAlienY = alienY + alienAtual.posY + 68;
+        tiroAlienX = alienX + alienAtual.posX + metadeDoAlienX;
+        movimentoTiroAlien = setInterval(disparatiroAlien, 40, alienAtual, tiroAlienX);
+    }
+
+}
+
+if(pontuacao==1100){
+    Ganhei();
+}
+
+function Ganhei(){
+    canhaoX = 180;
+    laserX = 193;
+    laserY = 520;
+    alienX = 0;
+    alienY = 0;
+    posicao = 0;
+    aliensRestantes = [];
+    inicioLaser = false;
+	
+    c.fillStyle = "purple";
+	c.fillRect(0, 0, C_LARGURA, C_ALTURA);
+    
+    c.textAlign = "center";
+    c.font = "16px Arial";
+    c.fillStyle = "white";
+    c.fillText("YOU WIN" , C_LARGURA/2, C_ALTURA/2);
+
+    onkeydown = null;
+    audioqueIsso.play();
+}
+
+function HP(){
+    h.textAlign = "left";
+    h.font = "16px Arial";
+    h.fillStyle = "white";
+    h.fillText("Vidas: " + vidas, H_LARGURA, H_ALTURA);
+}
+
+function pontosTotais(){
+    h.textAlign = "left";
+    h.font = "16px Arial";
+    h.fillStyle = "white";
+    h.fillText("Pontos: " + pontuacao, H_LARGURA, H_ALTURA*2);
+}
+
+if(vidas == 0){
+    fimDeJogo()
+}
+
+
+
+
+ 
+
+
+</script>
